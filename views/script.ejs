@@ -1,0 +1,34 @@
+<script>
+function getLocation() {
+  let btn = document.getElementById("saveBtn");
+  btn.classList.add("kill-effect");
+
+  document.getElementById("msg").innerText = "Locating… 🔍";
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      document.getElementById("msg").innerText = "Saving… ⚡";
+
+      const res = await fetch("/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lon })
+      });
+
+      const data = await res.json();
+      document.getElementById("msg").innerText = data.msg;
+
+      setTimeout(() => location.reload(), 800);
+    },
+    () => {
+      document.getElementById("msg").innerText =
+        "❌ GPS Permission Denied";
+    }
+  );
+
+  setTimeout(() => btn.classList.remove("kill-effect"), 500);
+}
+</script>
