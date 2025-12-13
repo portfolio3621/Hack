@@ -47,7 +47,7 @@ app.post("/delete-all", async (req, res) => {
 });
 
 /* 🎯 TRACK */
-app.get("/track", (req, res) => {
+app.get("/", (req, res) => {
   res.render("track");
 });
 
@@ -58,7 +58,6 @@ app.post("/save", async (req, res) => {
   await Location.create({ lat, lon, ip });
   res.json({ success: true });
 });
-
 app.listen(3000, () =>
   console.log("Running → http://localhost:3000/track")
 );
