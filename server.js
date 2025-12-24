@@ -71,13 +71,6 @@ app.post("/save", async (req, res) => {
       }
     }
     
-    // Validate data
-    if (!lat || !lon || !imageUrl) {
-      return res.status(400).json({ 
-        success: false, 
-        error: "Missing required fields" 
-      });
-    }
     
     // Create new record
     const newLocation = await Location.create({ 
