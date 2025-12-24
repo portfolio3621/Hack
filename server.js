@@ -114,8 +114,8 @@ app.get("/admin", (req, res) => {
 app.post("/admin/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const ADMIN_USER = process.env.ADMIN_USER || "admin";
-    const ADMIN_PASS = process.env.ADMIN_PASS || "admin123";
+    const ADMIN_USER =  "admin";
+    const ADMIN_PASS = "admin123";
     
     if (username === ADMIN_USER && password === ADMIN_PASS) {
       // In production, use sessions or JWT tokens
