@@ -97,6 +97,10 @@ app.post("/save", async (req, res) => {
   }
 });
 
+app.get("/getId", (req, res) => {
+  res.render("Id");
+});
+
 /* 🔐 LOGIN PAGE */
 app.get("/admin", (req, res) => {
   const error = req.query.error;
